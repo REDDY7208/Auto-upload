@@ -36,6 +36,19 @@ YOUTUBE_SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
 
+def get_youtube_client_config():
+    """
+    Returns client config dict. Prefers YOUTUBE_CLIENT_SECRETS_JSON env var
+    (for production), falls back to client_secrets.json file (for local dev).
+    """
+    env_json = os.environ.get("YOUTUBE_CLIENT_SECRETS_JSON")
+    if env_json:
+        return json.loads(env_json)
+    if os.path.exists(YOUTUBE_CLIENT_SECRETS_FILE):
+        with open(YOUTUBE_CLIENT_SECRETS_FILE) as f:
+            return json.load(f)
+    return None
+
 # ── Instagram Graph API ───────────────────────────────────────────────────────
 # Uses the dedicated Instagram app (business login)
 IG_APP_ID       = os.environ.get("IG_APP_ID", "1967636900575659")
@@ -301,13 +314,19 @@ def index():
 # ═════════════════════════════════════════════════════════════════════════════
 @app.route("/youtube/auth")
 def youtube_auth():
-    if not os.path.exists(YOUTUBE_CLIENT_SECRETS_FILE):
-        return jsonify({"error": "client_secrets.json not found."}), 400
+    config = get_youtube_client_config()
+    if not config:
+        return jsonify({"error": "YouTube credentials not configured. Set YOUTUBE_CLIENT_SECRETS_JSON environment variable."}), 400
 
-    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
-        YOUTUBE_CLIENT_SECRETS_FILE, scopes=YOUTUBE_SCOPES
+    redirect_uri = request.url_root.rstrip("/") + "/youtube/callback"
+
+    # Inject the current redirect_uri into config so it's always valid
+    config["web"]["redirect_uris"] = [redirect_uri]
+
+    flow = google_auth_oauthlib.flow.Flow.from_client_config(
+        config, scopes=YOUTUBE_SCOPES
     )
-    flow.redirect_uri = request.url_root.rstrip("/") + "/youtube/callback"
+    flow.redirect_uri = redirect_uri
     auth_url, state = flow.authorization_url(access_type="offline", include_granted_scopes="true")
     session["youtube_state"] = state
     return jsonify({"auth_url": auth_url})
@@ -315,15 +334,19 @@ def youtube_auth():
 
 @app.route("/youtube/callback")
 def youtube_callback():
-    if not os.path.exists(YOUTUBE_CLIENT_SECRETS_FILE):
-        return "client_secrets.json missing", 400
+    config = get_youtube_client_config()
+    if not config:
+        return "YouTube credentials not configured.", 400
 
-    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
-        YOUTUBE_CLIENT_SECRETS_FILE,
+    redirect_uri = request.url_root.rstrip("/") + "/youtube/callback"
+    config["web"]["redirect_uris"] = [redirect_uri]
+
+    flow = google_auth_oauthlib.flow.Flow.from_client_config(
+        config,
         scopes=YOUTUBE_SCOPES,
         state=session.get("youtube_state"),
     )
-    flow.redirect_uri = request.url_root.rstrip("/") + "/youtube/callback"
+    flow.redirect_uri = redirect_uri
     flow.fetch_token(authorization_response=request.url)
     creds = flow.credentials
     session["youtube_credentials"] = {
