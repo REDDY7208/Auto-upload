@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Connected — VideoUpload Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #080812;
+      --surface:  #11111f;
+      --surface2: #16162a;
+      --border:   rgba(255,255,255,.07);
+      --primary:  #4f46e5;
+      --primary-light: #6366f1;
+      --success:  #10b981;
+      --text:     #f0f0ff;
+      --muted:    #a0a0c0;
+    }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Animated background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(79,70,229,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79,70,229,.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .glow-orb {
+      position: fixed;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(79,70,229,.15) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 20px;
+      padding: 48px 44px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 24px 64px rgba(0,0,0,.7);
+      animation: popIn .5s cubic-bezier(.34,1.56,.64,1) both;
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(.88) translateY(16px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* Brand */
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 36px;
+    }
+    .brand-icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .brand-name {
+      font-size: .9rem;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: -.01em;
+    }
+
+    /* Success ring */
+    .success-ring {
+      width: 88px; height: 88px;
+      border-radius: 50%;
+      background: rgba(16,185,129,.1);
+      border: 2px solid rgba(16,185,129,.3);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 24px;
+      animation: ringPulse 2s ease-in-out infinite;
+      position: relative;
+    }
+    .success-ring::before {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 1px solid rgba(16,185,129,.15);
+      animation: ringPulse 2s ease-in-out infinite .3s;
+    }
+    @keyframes ringPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,.2); }
+      50% { box-shadow: 0 0 0 12px rgba(16,185,129,0); }
+    }
+    .success-ring .check { font-size: 36px; }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -.03em;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .platform-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      background: rgba(16,185,129,.12);
+      border: 1px solid rgba(16,185,129,.25);
+      color: var(--success);
+      font-size: .8rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .platform-pill::before { content: '●'; font-size: .5rem; }
+
+    p {
+      color: var(--muted);
+      font-size: .88rem;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0 0 28px;
+    }
+
+    .info-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--surface2);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      font-size: .82rem;
+    }
+    .info-row .key { color: var(--muted); }
+    .info-row .val { font-weight: 600; color: var(--text); }
+    .info-row .val.green { color: var(--success); }
+
+    .btn-back {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 13px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #fff;
+      font-size: .9rem;
+      font-weight: 700;
+      font-family: inherit;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      margin-top: 24px;
+      transition: filter .15s, box-shadow .15s;
+      box-shadow: 0 4px 20px rgba(79,70,229,.4);
+      letter-spacing: -.01em;
+    }
+    .btn-back:hover { filter: brightness(1.08); box-shadow: 0 6px 28px rgba(79,70,229,.55); }
+
+    .auto-close-bar {
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 16px;
+    }
+    .auto-close-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--primary-light));
+      border-radius: 2px;
+      width: 100%;
+      animation: drain 2s linear forwards;
+    }
+    @keyframes drain {
+      from { width: 100%; }
+      to   { width: 0%; }
+    }
+
+    .countdown-note {
+      font-size: .72rem;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+    #popup-note { display: none; }
+  </style>
+</head>
+<body>
+  <div class="glow-orb"></div>
+
+  <div class="card">
+    <div class="brand">
+      <div class="brand-icon">🎬</div>
+      <span class="brand-name">VideoUpload Pro</span>
+    </div>
+
+    <div class="success-ring">
+      <span class="check">✓</span>
+    </div>
+
+    <h1>{{ platform }} Connected!</h1>
+    <div class="platform-pill">{{ platform }}</div>
+    <p>Your {{ platform }} account has been successfully authorized. You can now publish videos directly from VideoUpload Pro.</p>
+
+    <div class="divider"></div>
+
+    <div class="info-row">
+      <span class="key">Status</span>
+      <span class="val green">✓ Authorized</span>
+    </div>
+    <div class="info-row">
+      <span class="key">Platform</span>
+      <span class="val">{{ platform }}</span>
+    </div>
+    <div class="info-row">
+      <span class="key">Scope</span>
+      <span class="val">Upload &amp; Publish</span>
+    </div>
+
+    <!-- Shown when opened as popup -->
+    <div id="popup-note">
+      <div class="auto-close-bar">
+        <div class="auto-close-fill"></div>
+      </div>
+      <p class="countdown-note">This window will close automatically…</p>
+    </div>
+
+    <!-- Shown when opened as full page -->
+    <a href="/" class="btn-back" id="back-btn">
+      ← Back to VideoUpload Pro
+    </a>
+  </div>
+
+  <script>
+    if (window.opener) {
+      // Opened as OAuth popup — notify parent and close
+      document.getElementById('popup-note').style.display = 'block';
+      document.getElementById('back-btn').style.display   = 'none';
+
+      try {
+        // Notify for both YouTube and Instagram OAuth popups
+        window.opener.postMessage({ type: 'youtube_auth_success' }, '*');
+        window.opener.postMessage({ type: 'instagram_auth_success' }, '*');
+      } catch (_) {}
+
+      setTimeout(() => {
+        try { window.close(); } catch (_) {}
+      }, 2000);
+    }
+  </script>
+</body>
+</html>

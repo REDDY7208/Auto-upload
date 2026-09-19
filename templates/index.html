@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VideoUpload Pro — Publish Everywhere</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!--  SIDEBAR                                                               -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <aside class="sidebar" id="sidebar">
+
+    <a class="sidebar-brand" href="/">
+      <div class="brand-icon">🎬</div>
+      <div>
+        <div class="brand-name">VideoUpload Pro</div>
+        <div class="brand-version">v2.0 · Enterprise</div>
+      </div>
+    </a>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Workspace</div>
+
+      <button class="nav-item active" onclick="scrollTo({top:0,behavior:'smooth'})">
+        <span class="nav-icon">📤</span>
+        New Upload
+        <span class="nav-badge">New</span>
+      </button>
+
+      <button class="nav-item" onclick="showToast('Coming soon', 'info')">
+        <span class="nav-icon">📊</span>
+        Analytics
+      </button>
+
+      <button class="nav-item" onclick="showToast('Coming soon', 'info')">
+        <span class="nav-icon">🗂️</span>
+        Upload History
+      </button>
+
+      <div class="nav-section-label" style="margin-top:8px;">Platforms</div>
+
+      <button class="nav-item" id="nav-yt" onclick="scrollToSection('connect-section')">
+        <span class="nav-icon">▶️</span>
+        YouTube
+        <span id="nav-yt-dot" style="margin-left:auto;width:8px;height:8px;border-radius:50%;background:#606080;flex-shrink:0;"></span>
+      </button>
+
+      <button class="nav-item" id="nav-ig" onclick="scrollToSection('connect-section')">
+        <span class="nav-icon">📷</span>
+        Instagram
+        <span id="nav-ig-dot" style="margin-left:auto;width:8px;height:8px;border-radius:50%;background:#606080;flex-shrink:0;"></span>
+      </button>
+
+      <div class="nav-section-label" style="margin-top:8px;">Settings</div>
+
+      <button class="nav-item" onclick="showToast('Coming soon', 'info')">
+        <span class="nav-icon">⚙️</span>
+        Preferences
+      </button>
+
+      <button class="nav-item" onclick="showToast('Coming soon', 'info')">
+        <span class="nav-icon">🔐</span>
+        API Keys
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar">VP</div>
+        <div class="user-info">
+          <div class="user-name">VideoUpload Pro</div>
+          <div class="user-role">Admin · Local Dev</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!--  MAIN CONTENT                                                          -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div class="main-content">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-title">
+        <h1>Publish Video</h1>
+        <p>Upload to YouTube &amp; Instagram simultaneously</p>
+      </div>
+      <div class="topbar-actions">
+        <div class="topbar-btn">
+          <div class="status-dot"></div>
+          Server Online
+        </div>
+        <button class="topbar-btn" onclick="showToast('No new notifications', 'info')">
+          🔔 Notifications
+        </button>
+      </div>
+    </header>
+
+    <!-- Page Body -->
+    <div class="page-content fade-in">
+
+      <!-- Stats Row -->
+      <div class="stats-row">
+        <div class="stat-card fade-in">
+          <div class="stat-icon purple">📤</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-uploads">0</div>
+            <div class="stat-label">Uploads This Session</div>
+          </div>
+        </div>
+        <div class="stat-card fade-in">
+          <div class="stat-icon red">▶️</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-yt-count">—</div>
+            <div class="stat-label">YouTube Status</div>
+          </div>
+        </div>
+        <div class="stat-card fade-in">
+          <div class="stat-icon pink">📷</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-ig-count">—</div>
+            <div class="stat-label">Instagram Status</div>
+          </div>
+        </div>
+        <div class="stat-card fade-in">
+          <div class="stat-icon green">✅</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-success">0</div>
+            <div class="stat-label">Successful Uploads</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Workflow Steps -->
+      <div class="workflow-steps" id="workflow-steps">
+        <div class="step active" id="step-1" onclick="gotoStep(1)">
+          <div class="step-number">1</div>
+          <div class="step-label">Connect Platforms</div>
+        </div>
+        <div class="step" id="step-2" onclick="gotoStep(2)">
+          <div class="step-number">2</div>
+          <div class="step-label">Select Video</div>
+        </div>
+        <div class="step" id="step-3" onclick="gotoStep(3)">
+          <div class="step-number">3</div>
+          <div class="step-label">Add Details</div>
+        </div>
+        <div class="step" id="step-4" onclick="gotoStep(4)">
+          <div class="step-number">4</div>
+          <div class="step-label">Publish</div>
+        </div>
+      </div>
+
+      <!-- Two-column content grid -->
+      <div class="content-grid">
+
+        <!-- ── LEFT COLUMN ─────────────────────────────────────────────── -->
+        <div>
+
+          <!-- Section: Connect Platforms -->
+          <div class="card slide-up" id="connect-section" style="margin-bottom:20px;">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-title-icon">🔗</div>
+                <div>
+                  <h2>Platform Connections</h2>
+                  <p>Connect your accounts to start publishing</p>
+                </div>
+              </div>
+              <span class="badge badge-disconnected" id="connections-badge">0 / 2 Connected</span>
+            </div>
+            <div class="card-body">
+
+              <!-- YouTube -->
+              <div class="platform-item" id="yt-platform-item">
+                <div class="platform-logo">
+                  <img src="/static/youtube-icon.svg" alt="YouTube"/>
+                </div>
+                <div class="platform-meta">
+                  <h3>YouTube</h3>
+                  <p>OAuth2 · No password stored · Google API</p>
+                </div>
+                <span id="yt-status-badge" class="badge badge-disconnected">Disconnected</span>
+                <button id="yt-connect-btn" class="btn btn-youtube btn-sm" onclick="connectYouTube()">
+                  Connect
+                </button>
+              </div>
+
+              <!-- Instagram -->
+              <div class="platform-item" id="ig-platform-item">
+                <div class="platform-logo">
+                  <img src="/static/instagram-icon.svg" alt="Instagram"/>
+                </div>
+                <div class="platform-meta">
+                  <h3>Instagram</h3>
+                  <p>OAuth2 via Facebook · Business/Creator account required</p>
+                </div>
+                <span id="ig-status-badge" class="badge badge-disconnected">Disconnected</span>
+                <button id="ig-connect-btn" class="btn btn-instagram btn-sm" onclick="connectInstagram()">
+                  Connect
+                </button>
+              </div>
+
+              <!-- Instagram info box -->
+              <div class="info-box" style="margin-top:12px;">
+                <span class="info-box-icon">ℹ️</span>
+                Instagram requires a <strong>Business or Creator</strong> account linked to a Facebook Page.
+                Click <em>Connect</em> to authorise via Facebook OAuth — no password needed.
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Section: Upload Form -->
+          <div class="card slide-up" id="upload-section">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-title-icon">🎬</div>
+                <div>
+                  <h2>Video Details</h2>
+                  <p>Configure your video before publishing</p>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <form id="upload-form" enctype="multipart/form-data" onsubmit="startUpload(event)">
+
+                <!-- Drop Zone -->
+                <div class="drop-zone" id="drop-zone"
+                     onclick="document.getElementById('video-input').click()">
+                  <div class="drop-zone-inner" id="drop-zone-inner">
+                    <div class="drop-icon-wrap">🎞️</div>
+                    <h3>Drop your video here</h3>
+                    <p>or click anywhere in this area to browse</p>
+                    <div class="file-type-pills">
+                      <span class="pill">MP4</span>
+                      <span class="pill">MOV</span>
+                      <span class="pill">AVI</span>
+                      <span class="pill">MKV</span>
+                      <span class="pill">WEBM</span>
+                    </div>
+                    <p style="margin-top:8px;font-size:.72rem;color:var(--text-muted);">Max file size: 500 MB</p>
+                  </div>
+                  <div class="file-preview" id="file-preview" style="display:none;">
+                    <div class="file-thumb">🎞️</div>
+                    <div class="file-details">
+                      <div class="name" id="file-name">filename.mp4</div>
+                      <div class="meta">
+                        Ready to upload
+                        <span class="size-badge" id="file-size">0 MB</span>
+                      </div>
+                    </div>
+                    <button type="button" class="btn-remove" onclick="removeFile(event)">✕</button>
+                  </div>
+                  <input type="file" id="video-input" name="video" accept="video/*"
+                         hidden onchange="onFileSelected(this)"/>
+                </div>
+
+                <!-- Form Fields -->
+                <div class="form-stack">
+
+                  <div class="form-group">
+                    <label class="form-label" for="title">
+                      Video Title <span class="required">*</span>
+                    </label>
+                    <input type="text" id="title" name="title" class="form-input"
+                           placeholder="Enter a compelling title…" required maxlength="100"/>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label" for="description">Description</label>
+                    <textarea id="description" name="description" class="form-textarea"
+                              rows="3" placeholder="Tell viewers what this video is about…"></textarea>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label" for="tags">
+                        Tags <span class="hint-text">(comma separated)</span>
+                      </label>
+                      <input type="text" id="tags" name="tags" class="form-input"
+                             placeholder="travel, vlog, tech"/>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" for="privacy">YouTube Visibility</label>
+                      <select id="privacy" name="privacy" class="form-select">
+                        <option value="public">🌍 Public</option>
+                        <option value="unlisted">🔗 Unlisted</option>
+                        <option value="private">🔒 Private</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label" for="caption">Instagram Caption</label>
+                    <textarea id="caption" name="caption" class="form-textarea"
+                              rows="2" placeholder="Caption for your Instagram post… #hashtags"></textarea>
+                  </div>
+
+                </div>
+
+                <!-- Platform Selection -->
+                <div style="margin-top:20px;">
+                  <div class="platform-selector-label" style="margin-bottom:10px;">
+                    Publish To
+                  </div>
+                  <div class="platform-selector">
+                    <label class="platform-toggle" id="yt-toggle">
+                      <input type="checkbox" name="platforms" value="youtube" id="yt-checkbox"/>
+                      <div class="toggle-icon">
+                        <img src="/static/youtube-icon.svg" alt="YouTube"/>
+                      </div>
+                      <div class="toggle-info">
+                        <div class="name">YouTube</div>
+                        <div class="sub" id="yt-toggle-sub">Connect account to enable</div>
+                      </div>
+                      <div class="toggle-check"></div>
+                    </label>
+
+                    <label class="platform-toggle" id="ig-toggle">
+                      <input type="checkbox" name="platforms" value="instagram" id="ig-checkbox"/>
+                      <div class="toggle-icon">
+                        <img src="/static/instagram-icon.svg" alt="Instagram"/>
+                      </div>
+                      <div class="toggle-info">
+                        <div class="name">Instagram</div>
+                        <div class="sub" id="ig-toggle-sub">Connect account to enable</div>
+                      </div>
+                      <div class="toggle-check"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="btn btn-upload-main btn-full" id="upload-btn">
+                  🚀&nbsp; Publish Now
+                </button>
+
+              </form>
+            </div>
+          </div>
+
+        </div>
+        <!-- ── END LEFT COLUMN ──────────────────────────────────────────── -->
+
+        <!-- ── RIGHT PANEL ─────────────────────────────────────────────── -->
+        <div class="right-panel">
+
+          <!-- Upload Progress -->
+          <div class="card" id="progress-card" style="display:none;">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-title-icon">📡</div>
+                <div>
+                  <h2>Upload Progress</h2>
+                  <p>Real-time publishing status</p>
+                </div>
+              </div>
+            </div>
+            <div class="card-body" id="progress-body">
+
+              <div class="progress-item" id="yt-progress-item" style="display:none;">
+                <div class="progress-header">
+                  <div class="progress-picon">
+                    <img src="/static/youtube-icon.svg" alt="YouTube"/>
+                  </div>
+                  <span class="progress-name">YouTube</span>
+                  <span class="progress-status-text" id="yt-progress-status">Waiting…</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill" id="yt-progress-bar" style="width:0%"></div>
+                </div>
+                <div class="progress-msg" id="yt-progress-message"></div>
+              </div>
+
+              <div class="progress-item" id="ig-progress-item" style="display:none;">
+                <div class="progress-header">
+                  <div class="progress-picon">
+                    <img src="/static/instagram-icon.svg" alt="Instagram"/>
+                  </div>
+                  <span class="progress-name">Instagram</span>
+                  <span class="progress-status-text" id="ig-progress-status">Waiting…</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill ig" id="ig-progress-bar" style="width:0%"></div>
+                </div>
+                <div class="progress-msg" id="ig-progress-message"></div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Session Summary -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-title-icon">📋</div>
+                <div>
+                  <h2>Session Summary</h2>
+                  <p>Current workspace status</p>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="session-list">
+                <div class="session-row">
+                  <span class="label">YouTube</span>
+                  <span class="value" id="session-yt">Not connected</span>
+                </div>
+                <div class="divider"></div>
+                <div class="session-row">
+                  <span class="label">Instagram</span>
+                  <span class="value" id="session-ig">Not configured</span>
+                </div>
+                <div class="divider"></div>
+                <div class="session-row">
+                  <span class="label">Selected File</span>
+                  <span class="value" id="session-file">None</span>
+                </div>
+                <div class="divider"></div>
+                <div class="session-row">
+                  <span class="label">Platforms Selected</span>
+                  <span class="value" id="session-platforms">None</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tips Card -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <div class="card-title-icon">💡</div>
+                <div>
+                  <h2>Pro Tips</h2>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div class="info-box">
+                  <span class="info-box-icon">▶️</span>
+                  YouTube uploads use OAuth2 — your Google password is never shared with this app.
+                </div>
+                <div class="info-box">
+                  <span class="info-box-icon">📷</span>
+                  For Instagram, use short videos under 60s for best Reels compatibility.
+                </div>
+                <div class="info-box">
+                  <span class="info-box-icon">🏷️</span>
+                  Add 5–10 relevant tags to boost discoverability on YouTube.
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <!-- ── END RIGHT PANEL ──────────────────────────────────────────── -->
+
+      </div>
+      <!-- end content-grid -->
+
+    </div>
+    <!-- end page-content -->
+
+    <!-- Footer -->
+    <footer style="border-top:1px solid var(--border);padding:14px 32px;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:.75rem;color:var(--text-muted);">VideoUpload Pro &copy; 2026 &nbsp;·&nbsp; Enterprise Edition</span>
+      <span style="font-size:.75rem;color:var(--text-muted);">Credentials are never stored permanently</span>
+    </footer>
+
+  </div>
+  <!-- end main-content -->
+
+</div>
+<!-- end app-shell -->
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
