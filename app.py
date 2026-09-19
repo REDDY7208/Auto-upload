@@ -37,16 +37,16 @@ YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
 
 # ── Instagram Graph API ───────────────────────────────────────────────────────
-IG_APP_ID       = os.environ.get("IG_APP_ID", "")
+# Uses the dedicated Instagram app (business login)
+IG_APP_ID       = os.environ.get("IG_APP_ID", "1967636900575659")
 IG_APP_SECRET   = os.environ.get("IG_APP_SECRET", "")
 IG_GRAPH_URL    = "https://graph.facebook.com/v19.0"
-# Redirect URI must be registered in your Facebook App → Products → Instagram → Basic Display
-# or under Facebook Login → Valid OAuth Redirect URIs
 IG_REDIRECT_URI = os.environ.get(
     "IG_REDIRECT_URI",
     "http://localhost:5000/instagram/callback"
 )
-IG_SCOPES       = "instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement"
+# Scopes for Instagram Business Login (new Instagram API, no Facebook Login needed)
+IG_SCOPES       = "instagram_business_basic,instagram_business_content_publish"
 
 # In-memory upload progress store  { task_id: { platform: { status, progress, message } } }
 upload_status: dict = {}
@@ -347,67 +347,61 @@ def youtube_status():
 # ═════════════════════════════════════════════════════════════════════════════
 @app.route("/instagram/auth")
 def instagram_auth():
-    """Redirect user to Facebook OAuth login."""
-    fb_oauth_url = (
-        "https://www.facebook.com/v19.0/dialog/oauth"
+    """Redirect user to Instagram Business Login OAuth."""
+    ig_oauth_url = (
+        "https://www.instagram.com/oauth/authorize"
         f"?client_id={IG_APP_ID}"
         f"&redirect_uri={IG_REDIRECT_URI}"
         f"&scope={IG_SCOPES}"
         "&response_type=code"
-        "&state=ig_auth"
     )
-    return jsonify({"auth_url": fb_oauth_url})
+    return jsonify({"auth_url": ig_oauth_url})
 
 
 @app.route("/instagram/callback")
 def instagram_callback():
-    """Handle Facebook OAuth callback, exchange code for access token."""
+    """Handle Instagram OAuth callback, exchange code for access token."""
     error = request.args.get("error")
     if error:
         return f"<h3>Instagram auth failed: {request.args.get('error_description', error)}</h3>", 400
 
     code = request.args.get("code")
     if not code:
-        return "<h3>No code returned from Facebook.</h3>", 400
+        return "<h3>No code returned from Instagram.</h3>", 400
 
-    # Exchange code for short-lived user access token
-    token_resp = http_requests.get(
-        "https://graph.facebook.com/v19.0/oauth/access_token",
-        params={
+    # Exchange code for short-lived token
+    token_resp = http_requests.post(
+        "https://api.instagram.com/oauth/access_token",
+        data={
             "client_id":     IG_APP_ID,
             "client_secret": IG_APP_SECRET,
+            "grant_type":    "authorization_code",
             "redirect_uri":  IG_REDIRECT_URI,
             "code":          code,
         }
     )
     token_data = token_resp.json()
-    if "error" in token_data:
-        return f"<h3>Token exchange failed: {token_data['error'].get('message')}</h3>", 400
+    if "error_type" in token_data or "error" in token_data:
+        msg = token_data.get("error_message") or token_data.get("error", {}).get("message", "Unknown error")
+        return f"<h3>Token exchange failed: {msg}</h3>", 400
 
     short_token = token_data.get("access_token")
+    ig_user_id  = str(token_data.get("user_id", ""))
 
     # Exchange for long-lived token (60 days)
     long_resp = http_requests.get(
-        "https://graph.facebook.com/v19.0/oauth/access_token",
+        "https://graph.instagram.com/access_token",
         params={
-            "grant_type":    "fb_exchange_token",
-            "client_id":     IG_APP_ID,
-            "client_secret": IG_APP_SECRET,
-            "fb_exchange_token": short_token,
+            "grant_type":        "ig_exchange_token",
+            "client_secret":     IG_APP_SECRET,
+            "access_token":      short_token,
         }
     )
-    long_data = long_resp.json()
+    long_data  = long_resp.json()
     long_token = long_data.get("access_token", short_token)
 
-    # Fetch Instagram Business Account ID
-    try:
-        ig_user_id, page_token = get_ig_user_id(long_token)
-    except RuntimeError as e:
-        return f"<h3>{e}</h3>", 400
-
     # Store in session
-    session["instagram_access_token"] = page_token   # page token has IG publish permission
-    session["instagram_user_token"]   = long_token
+    session["instagram_access_token"] = long_token
     session["instagram_user_id"]      = ig_user_id
 
     return render_template("auth_success.html", platform="Instagram")
@@ -466,7 +460,6 @@ def upload():
             daemon=True,
         )
         threads.append(t)
-
     if not threads:
         return jsonify({"error": "Select at least one platform."}), 400
 
