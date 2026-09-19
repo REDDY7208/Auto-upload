@@ -9,8 +9,9 @@ from dotenv import load_dotenv
 # Load .env file (ignored if not present)
 load_dotenv()
 
-# Allow OAuth over HTTP for local development
-os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
+# Allow OAuth over HTTP for local development only
+if os.environ.get("FLASK_ENV") != "production":
+    os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
 
 from werkzeug.utils import secure_filename
 import google.oauth2.credentials
@@ -41,7 +42,10 @@ IG_APP_SECRET   = os.environ.get("IG_APP_SECRET", "")
 IG_GRAPH_URL    = "https://graph.facebook.com/v19.0"
 # Redirect URI must be registered in your Facebook App → Products → Instagram → Basic Display
 # or under Facebook Login → Valid OAuth Redirect URIs
-IG_REDIRECT_URI = "http://localhost:5000/instagram/callback"
+IG_REDIRECT_URI = os.environ.get(
+    "IG_REDIRECT_URI",
+    "http://localhost:5000/instagram/callback"
+)
 IG_SCOPES       = "instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement"
 
 # In-memory upload progress store  { task_id: { platform: { status, progress, message } } }
