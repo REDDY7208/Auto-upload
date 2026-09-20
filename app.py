@@ -6,6 +6,23 @@ import requests as http_requests
 from flask import Flask, request, jsonify, render_template, session, redirect
 from dotenv import load_dotenv
 
+# ── Token persistence helpers ─────────────────────────────────────────────────
+TOKEN_FILE = os.path.join(os.path.dirname(__file__), ".ig_token.json")
+
+def save_ig_token(access_token: str, user_id: str):
+    with open(TOKEN_FILE, "w") as f:
+        json.dump({"access_token": access_token, "user_id": user_id}, f)
+
+def load_ig_token():
+    if os.path.exists(TOKEN_FILE):
+        with open(TOKEN_FILE) as f:
+            return json.load(f)
+    return None
+
+def clear_ig_token():
+    if os.path.exists(TOKEN_FILE):
+        os.remove(TOKEN_FILE)
+
 # Load .env file (ignored if not present)
 load_dotenv()
 
@@ -424,16 +441,18 @@ def instagram_callback():
     long_data  = long_resp.json()
     long_token = long_data.get("access_token", short_token)
 
-    # Store in session
+    # Store in session AND persist to file
     session["instagram_access_token"] = long_token
     session["instagram_user_id"]      = ig_user_id
+    save_ig_token(long_token, ig_user_id)
 
     return render_template("auth_success.html", platform="Instagram")
 
 
 @app.route("/instagram/status")
 def instagram_status():
-    return jsonify({"authenticated": "instagram_user_id" in session})
+    authenticated = "instagram_user_id" in session or load_ig_token() is not None
+    return jsonify({"authenticated": authenticated})
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -475,7 +494,12 @@ def upload():
 
     if "instagram" in platforms:
         if "instagram_user_id" not in session:
-            return jsonify({"error": "Instagram not authenticated. Connect your Instagram account first."}), 401
+            ig_token_data = load_ig_token()
+            if ig_token_data:
+                session["instagram_access_token"] = ig_token_data["access_token"]
+                session["instagram_user_id"]      = ig_token_data["user_id"]
+            else:
+                return jsonify({"error": "Instagram not authenticated. Connect your Instagram account first."}), 401
         t = threading.Thread(
             target=upload_to_instagram,
             args=(task_id, filepath, caption,

@@ -11,3 +11,4 @@ build/
 *.session
 *.json.bak
 client_secrets.json
+.ig_token.json
