@@ -544,6 +544,7 @@ def _upload_inner():
         return jsonify({"error": "Invalid or unsupported file type"}), 400
 
     filename = secure_filename(file.filename)
+    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
     filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
     file.save(filepath)
     log.info("File saved: %s (%.2f MB)", filepath, os.path.getsize(filepath) / 1024 / 1024)
