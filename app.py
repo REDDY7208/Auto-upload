@@ -331,22 +331,23 @@ def index():
 # ═════════════════════════════════════════════════════════════════════════════
 @app.route("/youtube/auth")
 def youtube_auth():
-    config = get_youtube_client_config()
-    if not config:
-        return jsonify({"error": "YouTube credentials not configured. Set YOUTUBE_CLIENT_SECRETS_JSON environment variable."}), 400
+    try:
+        config = get_youtube_client_config()
+        if not config:
+            return jsonify({"error": "YouTube credentials not configured. Set YOUTUBE_CLIENT_SECRETS_JSON environment variable."}), 400
 
-    redirect_uri = request.url_root.rstrip("/") + "/youtube/callback"
+        redirect_uri = request.url_root.rstrip("/") + "/youtube/callback"
+        config["web"]["redirect_uris"] = [redirect_uri]
 
-    # Inject the current redirect_uri into config so it's always valid
-    config["web"]["redirect_uris"] = [redirect_uri]
-
-    flow = google_auth_oauthlib.flow.Flow.from_client_config(
-        config, scopes=YOUTUBE_SCOPES
-    )
-    flow.redirect_uri = redirect_uri
-    auth_url, state = flow.authorization_url(access_type="offline", include_granted_scopes="true")
-    session["youtube_state"] = state
-    return jsonify({"auth_url": auth_url})
+        flow = google_auth_oauthlib.flow.Flow.from_client_config(
+            config, scopes=YOUTUBE_SCOPES
+        )
+        flow.redirect_uri = redirect_uri
+        auth_url, state = flow.authorization_url(access_type="offline", include_granted_scopes="true")
+        session["youtube_state"] = state
+        return jsonify({"auth_url": auth_url})
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
 
 
 @app.route("/youtube/callback")
@@ -460,6 +461,12 @@ def instagram_status():
 # ═════════════════════════════════════════════════════════════════════════════
 @app.route("/upload", methods=["POST"])
 def upload():
+    try:
+     return _upload_inner()
+    except Exception as exc:
+        return jsonify({"error": f"Server error: {str(exc)}"}), 500
+
+def _upload_inner():
     if "video" not in request.files:
         return jsonify({"error": "No video file provided"}), 400
 
@@ -523,6 +530,22 @@ def upload():
 @app.route("/status/<task_id>")
 def get_status(task_id: str):
     return jsonify(upload_status.get(task_id, {}))
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  GLOBAL ERROR HANDLERS — always return JSON, never HTML
+# ═════════════════════════════════════════════════════════════════════════════
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify({"error": "Not found", "details": str(e)}), 404
+
+@app.errorhandler(500)
+def server_error(e):
+    return jsonify({"error": "Server error", "details": str(e)}), 500
+
+@app.errorhandler(Exception)
+def unhandled(e):
+    return jsonify({"error": "Unexpected error", "details": str(e)}), 500
 
 
 if __name__ == "__main__":
