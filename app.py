@@ -371,10 +371,11 @@ def youtube_status():
 @app.route("/instagram/auth")
 def instagram_auth():
     """Redirect user to Instagram Business Login OAuth."""
+    from urllib.parse import quote
     ig_oauth_url = (
         "https://www.instagram.com/oauth/authorize"
         f"?client_id={IG_APP_ID}"
-        f"&redirect_uri={IG_REDIRECT_URI}"
+        f"&redirect_uri={quote(IG_REDIRECT_URI, safe='')}"
         f"&scope={IG_SCOPES}"
         "&response_type=code"
     )
